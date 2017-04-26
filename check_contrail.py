@@ -8,6 +8,7 @@ from keystoneclient.exceptions import AuthorizationFailure, Unauthorized
 from vnc_api import vnc_api
 
 # Keystone Authentication variables
+# TODO get rid of credentials in python file
 username='admin'
 password='contrail123'
 tenant_name='admin'
