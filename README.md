@@ -3,7 +3,7 @@ Development project about Contrail forensic analysis
 Use Information from Contrail Analytics
 
 ### How to use it 
-Assumint you are running it from a node that has Contrail VNC API installed 
+Assuming you are running it from a node that has Contrail VNC API installed 
 ```
 apt-get install git
 
