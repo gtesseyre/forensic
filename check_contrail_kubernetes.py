@@ -83,7 +83,35 @@ def get_vrouter_stats (contrail_analytics_api, token, node_name):
   return [ node_flow_stats, warnings ]
 
 
+# function for getting vrouter drop stats since the last poll
+def get_vrouter_drop_stats (contrail_analytics_api, token, node_name):
+  node_drop_stats = []
+  url = contrail_analytics_api + '/analytics/uves/vrouter/' + node_name + '?cfilt=VrouterStatsAgent:drop_stats'
+  headers = {'X-Auth-Token': token}
+  r = requests.get(url, headers=headers)
+  json_resp = json.loads(r.text)
+  if 'VrouterStatsAgent' in json_resp:
+    node_drop_stats.append( [ node_name, json_resp['VrouterStatsAgent']['drop_stats']['ds_drop_pkts'], json_resp['VrouterStatsAgent']['drop_stats']['ds_flow_action_drop'],  json_resp['VrouterStatsAgent']['drop_stats']['ds_flow_unusable'], json_resp['VrouterStatsAgent']['drop_stats']['ds_flow_table_full'], json_resp['VrouterStatsAgent']['drop_stats']['ds_invalid_nh'], json_resp['VrouterStatsAgent']['drop_stats']['ds_frag_err'] ])
+  else:
+    # No info returned for the node
+    warnings.append ( [ node_name, 'No vRouter drop stats returned for node'])
 
+  return [ node_drop_stats, warnings ]
+
+# function for getting vrouter drop stats over the past 1h
+def get_vrouter_drop_stats_1h (contrail_analytics_api, token, node_name):
+  node_drop_stats_1h = []
+  url = contrail_analytics_api + '/analytics/uves/vrouter/' + node_name + '?cfilt=VrouterStatsAgent:drop_stats_1h'
+  headers = {'X-Auth-Token': token}
+  r = requests.get(url, headers=headers)
+  json_resp = json.loads(r.text)
+  if 'VrouterStatsAgent' in json_resp:
+    node_drop_stats_1h.append( [ node_name, json_resp['VrouterStatsAgent']['drop_stats_1h']['ds_drop_pkts'], json_resp['VrouterStatsAgent']['drop_stats_1h']['ds_flow_action_drop'],  json_resp['VrouterStatsAgent']['drop_stats_1h']['ds_flow_unusable'], json_resp['VrouterStatsAgent']['drop_stats_1h']['ds_flow_table_full'], json_resp['VrouterStatsAgent']['drop_stats_1h']['ds_invalid_nh'], json_resp['VrouterStatsAgent']['drop_stats_1h']['ds_frag_err'] ])
+  else:
+    # No info returned for the node
+    warnings.append ( [ node_name, 'No vRouter drop stats 1h returned for node'])
+
+  return [ node_drop_stats_1h, warnings ]
 
 
 # main
@@ -189,6 +217,15 @@ if __name__ == '__main__':
   table_flow = PrettyTable()
   table_flow._set_field_names ([ 'vRouter', 'active_flows', 'added_flows', 'deleted_flows', 'max_flow_adds_per_second', 'max_flow_deletes_per_second', 'min_flow_adds_per_second', 'min_flow_deletes_per_second' ])
 
+  table_drop = PrettyTable()
+  table_drop._set_field_names ([ 'vRouter', 'drop packets', 'flow action drop', 'flow unusable' ])
+
+  table_drop = PrettyTable()
+  table_drop._set_field_names ([ 'vRouter', 'drop packets', 'flow action drop', 'flow unusable', ' flow table full', 'invalid nh', 'frag err' ])
+
+  table_drop_1h = PrettyTable()
+  table_drop_1h._set_field_names ([ 'vRouter', 'drop packets (1h)', 'flow action drop (1h)', 'flow unusable (1h)', ' flow table full (1h)', 'invalid nh (1h)', 'frag err (1h)' ]) 
+
   table_warnings = PrettyTable()
   table_warnings._set_field_names ([ 'Components', 'Warning Message' ])
 
@@ -274,11 +311,23 @@ if __name__ == '__main__':
         table_flow.add_row ( node_flow_stats_row )
       for warnings_row in warnings:
         table_warnings.add_row ( warnings_row )
+     
+      # vRouter drop stats since the last poll
+      [ node_drop_stats, warnings ]  = get_vrouter_drop_stats ( contrail_analytics_api, token, contrail_vrouter_node_name )
+      for node_drop_stats_row in node_drop_stats:
+        table_drop.add_row ( node_drop_stats_row )
+      for warnings_row in warnings:
+        table_warnings.add_row ( warnings_row )
+
+      # vRouter drop stats over the last 1h
+      [ node_drop_stats_1h, warnings ]  = get_vrouter_drop_stats_1h ( contrail_analytics_api, token, contrail_vrouter_node_name )
+      for node_drop_stats_1h_row in node_drop_stats_1h:
+        table_drop_1h.add_row ( node_drop_stats_1h_row )
+      for warnings_row in warnings:
+        table_warnings.add_row ( warnings_row )
 
   else:
     table_warnings.add_row ("Global", "No vrouter nodes in global config")
-
-    
 
   # print tables
 
@@ -294,5 +343,9 @@ if __name__ == '__main__':
   # print vRouter flow info table
   table_flow.sortby = 'active_flows'
   print table_flow
+
+  print table_drop
+  
+  print table_drop_1h
 
   sys.exit(0)
