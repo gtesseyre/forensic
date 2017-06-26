@@ -32,7 +32,7 @@ optional arguments:
                         Contrail Analytics API URL
 ```
 
-Create a file with all credentials and source it 
+Create a file with all credentials 
 ```
 cat <<EOF> credentials
 export OS_AUTH_URL=http://10.87.64.26:5000/v2.0/
@@ -42,8 +42,13 @@ export OS_PASSWORD=contrail123
 export CONTRAIL_API=http://10.87.64.26:8082
 export CONTRAIL_ANALYTICS_API=http://10.87.64.26:8081
 EOF
-
+```
+Source the credentials file 
+```
 source credentials 
+```
+Run the script
+```
 python check_contrail.py
 ```
 Or use directly the python script passing environment variables as arguments
